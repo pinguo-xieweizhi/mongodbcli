@@ -1,0 +1,140 @@
+{
+    "id": "63918016dd0154ce25b00bcf",
+    "Scope": "ICC",
+    "TypeID": "all-fields-1",
+    "IsDeleted": false,
+    "Versions": [
+        {
+            "VersionID": "63a00c4d505b8a1b1f239a1d",
+            "VersionName": "默认版本",
+            "Name": "呵呵呵",
+            "Vip": 1,
+            "Tag": [
+                "6316e0169ad5c2b4ff01e708"
+            ],
+            "Platform": [
+                "iOS"
+            ],
+            "ClientVersion": {
+                "v": {
+                    "iOS": {
+                        "min": "1.1.1"
+                    }
+                }
+            },
+            "ValidDuration": {
+                "begin": 1671408000,
+                "end": 1672531199
+            },
+            "CreatedAt": "2022-12-08T06:11:34.524Z",
+            "UpdatedAt": "2022-12-19T06:51:47.386Z",
+            "Creator": "刘强",
+            "Mender": "刘强",
+            "Status": "offline",
+            "Custom": {
+                "danxuan": {
+                    "text": "nan"
+                },
+                "duoxuan": {
+                    "textArray": [
+                        "chifan",
+                        "shuijiao"
+                    ]
+                },
+                "fujian": {
+                    "file": {
+                        "uri": "qiniu://qa-c360/ICC/90f1ee809844b4c5a0a94480843bd062.png",
+                        "ext": ".png",
+                        "size": 90812
+                    }
+                },
+                "ref": {
+                    "reference": {
+                        "value": [
+                            "630dad89ac52d346ababae51"
+                        ]
+                    }
+                },
+                "sel": {
+                    "textArray": [
+                        "asdf"
+                    ]
+                },
+                "shijiandian": {
+                    "numberInt": 1671552000
+                },
+                "shijianduan": {
+                    "numberIntArray": [
+                        1670947200,
+                        1672502399
+                    ]
+                },
+                "shipin": {
+                    "video": {
+                        "uri": "qiniu://qa-c360/ICC/045e46d601e4f3b98438c80ad4b90482.mov",
+                        "ext": ".mov",
+                        "size": 1943071,
+                        "width": 1920,
+                        "height": 1080,
+                        "screenshot": {
+                            "uri": "qiniu://qa-c360/ICC/045e46d601e4f3b98438c80ad4b90482.mov-1.jpg",
+                            "size": 56732,
+                            "width": 1920,
+                            "height": 1080
+                        }
+                    }
+                },
+                "shuzi": {
+                    "numberFloat": 12
+                },
+                "shuziqujian": {
+                    "numberFloatArray": [
+                        1,
+                        2
+                    ]
+                },
+                "tupian": {
+                    "image": {
+                        "uri": "qiniu://qa-c360/ICC/90f1ee809844b4c5a0a94480843bd062.png",
+                        "ext": ".png",
+                        "size": 90812,
+                        "width": 1370,
+                        "height": 648
+                    }
+                },
+                "xxxxx": {
+                    "reference": {}
+                },
+                "yanse": {
+                    "text": "#2c4256"
+                },
+                "yinyongshuju": {
+                    "reference": {
+                        "value": [
+                            "639183cadd0154ce25b00c36"
+                        ]
+                    }
+                }
+            },
+            "Localize": [
+                {
+                    "clientLocale": {
+                        "typ": "language",
+                        "selected": [
+                            "zh-Hans"
+                        ]
+                    },
+                    "priority": 1,
+                    "custom": {
+                        "bendidanxuan": {
+                            "text": "hongse"
+                        },
+                        "bendishijiandian": {
+                            "numberInt": 1671724800
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

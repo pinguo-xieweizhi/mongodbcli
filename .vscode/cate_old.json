@@ -1,0 +1,74 @@
+{
+    "id": "63992abb0673a12341690fc8",
+    "Scope": "ICC",
+    "Name": "xwz-test",
+    "ParentID": "63992a7b0673a12341690fc7",
+    "TypeID": "cate-reconstruct",
+    "SortOrder": 0,
+    "SystemAttributes": [
+        {
+            "Code": "parent",
+            "FieldType": "Text",
+            "Value": {
+                "txt": {
+                    "Value": "63992a7b0673a12341690fc7"
+                }
+            }
+        },
+        {
+            "Code": "name",
+            "FieldType": "Text",
+            "Value": {
+                "txt": {
+                    "Value": "xwz-test"
+                }
+            }
+        }
+    ],
+    "LocalizeAttributes": [
+        {
+            "SystemAttributes": [
+                {
+                    "Code": "clientLocale",
+                    "FieldType": "NameAndValues",
+                    "Value": {
+                        "kv": [
+                            {
+                                "Name": "language",
+                                "Value": [
+                                    "en"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                {
+                    "Code": "priority",
+                    "FieldType": "Number",
+                    "Value": {
+                        "num": {
+                            "Value": 0
+                        }
+                    }
+                }
+            ],
+            "CustomAttributes": []
+        }
+    ],
+    "CustomAttributes": [
+        {
+            "Code": "level",
+            "FieldType": "NumberInt",
+            "Value": {
+                "int": {
+                    "Value": 14
+                }
+            }
+        }
+    ],
+    "IsDeleted": false,
+    "Creator": "谢伟志",
+    "Mender": "谢伟志",
+    "CreatedAt": "2022-12-14T01:45:31.101Z",
+    "UpdatedAt": "2022-12-14T01:45:31.101Z"
+}

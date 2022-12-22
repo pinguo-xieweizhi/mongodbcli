@@ -1,0 +1,34 @@
+{
+    "id": "63992abb0673a12341690fc8",
+    "Scope": "ICC",
+    "Parent": "63992a7b0673a12341690fc7",
+    "TypeID": "cate-reconstruct",
+    "SortOrder": 0,
+    "IsDeleted": false,
+    "Versions": [
+        {
+            "VersionID": "63a0388eaed3a41964c55ede",
+            "VersionName": "默认版本",
+            "Name": "xwz-test",
+            "Creator": "谢伟志",
+            "Mender": "谢伟志",
+            "CreatedAt": "2022-12-14T01:45:31.101Z",
+            "UpdatedAt": "2022-12-14T01:45:31.101Z",
+            "Custom": {
+                "level": {
+                    "numberInt": 14
+                }
+            },
+            "Localize": [
+                {
+                    "clientLocale": {
+                        "typ": "language",
+                        "selected": [
+                            "en"
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

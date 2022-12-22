@@ -1,0 +1,317 @@
+{
+    "id": "63918016dd0154ce25b00bcf",
+    "Scope": "ICC",
+    "TypeID": "all-fields-1",
+    "Name": "呵呵呵",
+    "IsVIP": 1,
+    "TagID": [
+        "6316e0169ad5c2b4ff01e708"
+    ],
+    "Platform": [
+        "iOS"
+    ],
+    "DatePeriod": {
+        "StartDate": 1671408000,
+        "EndDate": 1672531199
+    },
+    "SystemAttributes": [
+        {
+            "Code": "name",
+            "FieldType": "Text",
+            "Value": {
+                "txt": {
+                    "Value": "呵呵呵"
+                }
+            }
+        },
+        {
+            "Code": "validDuration",
+            "FieldType": "DatetimeRange",
+            "Value": {
+                "date": {
+                    "Value": [
+                        1671408000,
+                        1672531199
+                    ]
+                }
+            }
+        },
+        {
+            "Code": "platform",
+            "FieldType": "Enumeration",
+            "Value": {
+                "enum": {
+                    "Value": [
+                        "iOS"
+                    ]
+                }
+            }
+        },
+        {
+            "Code": "vip",
+            "FieldType": "Number",
+            "Value": {
+                "num": {
+                    "Value": 1
+                }
+            }
+        },
+        {
+            "Code": "clientVersion",
+            "FieldType": "Version",
+            "Value": {
+                "ver": {
+                    "iOS": {
+                        "min": "1.1.1",
+                        "max": "",
+                        "unsupported": []
+                    }
+                }
+            }
+        },
+        {
+            "Code": "tag",
+            "FieldType": "Tag",
+            "Value": {
+                "tag": {
+                    "Value": [
+                        "6316e0169ad5c2b4ff01e708"
+                    ]
+                }
+            }
+        }
+    ],
+    "CustomAttributes": [
+        {
+            "Code": "duoxuan",
+            "FieldType": "Enumeration",
+            "Value": {
+                "enum": {
+                    "Value": [
+                        "chifan",
+                        "shuijiao"
+                    ]
+                }
+            }
+        },
+        {
+            "Code": "danxuan",
+            "FieldType": "Enumeration",
+            "Value": {
+                "enum": {
+                    "Value": [
+                        "nan"
+                    ]
+                }
+            }
+        },
+        {
+            "Code": "shijiandian",
+            "FieldType": "Datetime",
+            "Value": {
+                "date": {
+                    "Value": [
+                        1671552000
+                    ]
+                }
+            }
+        },
+        {
+            "Code": "shijianduan",
+            "FieldType": "DatetimeRange",
+            "Value": {
+                "date": {
+                    "Value": [
+                        1670947200,
+                        1672502399
+                    ]
+                }
+            }
+        },
+        {
+            "Code": "shuziqujian",
+            "FieldType": "NumberRange",
+            "Value": {
+                "numRange": {
+                    "Value": [
+                        1,
+                        2
+                    ]
+                }
+            }
+        },
+        {
+            "Code": "fujian",
+            "FieldType": "File",
+            "Value": {
+                "file": {
+                    "URI": "qiniu://qa-c360/ICC/90f1ee809844b4c5a0a94480843bd062.png",
+                    "Size": 90812,
+                    "Suffix": ".png",
+                    "IsPrivate": false
+                }
+            }
+        },
+        {
+            "Code": "tupian",
+            "FieldType": "Image",
+            "Value": {
+                "image": {
+                    "URI": "qiniu://qa-c360/ICC/90f1ee809844b4c5a0a94480843bd062.png",
+                    "Size": 90812,
+                    "Suffix": ".png",
+                    "IsPrivate": false,
+                    "Width": 1370,
+                    "Height": 648
+                }
+            }
+        },
+        {
+            "Code": "yinyongshuju",
+            "FieldType": "Reference",
+            "Value": {
+                "ref": {
+                    "Value": [
+                        "639183cadd0154ce25b00c36"
+                    ],
+                    "PkgUrl": "",
+                    "PackInfo": null
+                }
+            }
+        },
+        {
+            "Code": "shipin",
+            "FieldType": "Video",
+            "Value": {
+                "video": {
+                    "URI": "qiniu://qa-c360/ICC/045e46d601e4f3b98438c80ad4b90482.mov",
+                    "Size": 1943071,
+                    "Suffix": ".mov",
+                    "IsPrivate": false,
+                    "Width": 1920,
+                    "Height": 1080,
+                    "Screenshot": {
+                        "URI": "qiniu://qa-c360/ICC/045e46d601e4f3b98438c80ad4b90482.mov-1.jpg",
+                        "Size": 56732,
+                        "Suffix": "",
+                        "IsPrivate": false,
+                        "Width": 1920,
+                        "Height": 1080
+                    }
+                }
+            }
+        },
+        {
+            "Code": "shuzi",
+            "FieldType": "NumberFloat",
+            "Value": {
+                "float": {
+                    "Value": 12
+                }
+            }
+        },
+        {
+            "Code": "yanse",
+            "FieldType": "Color",
+            "Value": {
+                "color": {
+                    "Value": "#2c4256"
+                }
+            }
+        },
+        {
+            "Code": "ref",
+            "FieldType": "Reference",
+            "Value": {
+                "ref": {
+                    "Value": [
+                        "630dad89ac52d346ababae51"
+                    ],
+                    "PkgUrl": "",
+                    "PackInfo": null
+                }
+            }
+        },
+        {
+            "Code": "sel",
+            "FieldType": "Enumeration",
+            "Value": {
+                "enum": {
+                    "Value": [
+                        "asdf"
+                    ]
+                }
+            }
+        },
+        {
+            "Code": "xxxxx",
+            "FieldType": "Reference",
+            "Value": {
+                "ref": {
+                    "Value": null,
+                    "PkgUrl": "",
+                    "PackInfo": null
+                }
+            }
+        }
+    ],
+    "LocalizeAttributes": [
+        {
+            "SystemAttributes": [
+                {
+                    "Code": "clientLocale",
+                    "FieldType": "NameAndValues",
+                    "Value": {
+                        "kv": [
+                            {
+                                "Name": "language",
+                                "Value": [
+                                    "zh-Hans"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                {
+                    "Code": "priority",
+                    "FieldType": "Number",
+                    "Value": {
+                        "num": {
+                            "Value": 1
+                        }
+                    }
+                }
+            ],
+            "CustomAttributes": [
+                {
+                    "Code": "bendidanxuan",
+                    "FieldType": "Enumeration",
+                    "Value": {
+                        "enum": {
+                            "Value": [
+                                "hongse"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Code": "bendishijiandian",
+                    "FieldType": "Datetime",
+                    "Value": {
+                        "date": {
+                            "Value": [
+                                1671724800
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "Status": "offline",
+    "IsDeleted": false,
+    "Creator": "刘强",
+    "Mender": "刘强",
+    "CreatedAt": "2022-12-08T06:11:34.524Z",
+    "UpdatedAt": "2022-12-19T06:51:47.386Z"
+}
