@@ -239,14 +239,14 @@ func main() {
 	// }
 
 	// //同步素材位置
-	// if err := material.SyncMaterialsPosition(ctx, dbCli); err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	//同步素材位置计划
-	if err := material.SyncMaterialsPlan(ctx, dbCli); err != nil {
+	if err := material.SyncMaterialsPosition(ctx, dbCli); err != nil {
 		log.Fatal(err)
 	}
+
+	//同步素材位置计划
+	// if err := material.SyncMaterialsPlan(ctx, dbCli); err != nil {
+	// 	log.Fatal(err)
+	// }
 }
 
 func insertDocument(ctx context.Context, client *mongo.Client) error {

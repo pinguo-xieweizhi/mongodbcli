@@ -1022,7 +1022,7 @@ type MaterialPosition struct {
 	DeviceLimited    map[DeviceLimitedType]string      `bson:"deviceLimited"`
 	Summary          string                            `bson:"summary"`
 	Active           bool                              `bson:"active"`
-	GotoId           string                            `bson:"gotoId"` // goto配置id
+	GotoId           []string                          `bson:"gotoId"` // goto配置id
 	IsDeleted        bool                              `bson:"isDeleted"`
 	EditInfo         `bson:",inline"`
 }

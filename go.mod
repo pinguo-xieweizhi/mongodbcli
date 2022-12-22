@@ -3,11 +3,11 @@ module github.com/pinguo-icc/mongodbcli
 go 1.18
 
 require (
-	github.com/pinguo-icc/field-definitions v1.1.6-0.20221220093537-0d62a6ed4e64
+	github.com/pinguo-icc/field-definitions v1.1.6-0.20221222021129-8cf7710655d3
 	github.com/pinguo-icc/go-base/v2 v2.6.8
 	github.com/pinguo-icc/go-lib/v2 v2.1.11
 	github.com/pinguo-icc/kratos-library v1.0.0
-	github.com/pinguo-icc/operational-materials-svc v1.0.1-0.20221216062443-4410ce037831
+	github.com/pinguo-icc/operational-materials-svc v1.0.1-0.20221222093630-e565d9a2a148
 	go.mongodb.org/mongo-driver v1.10.0
 	google.golang.org/protobuf v1.28.1
 )
@@ -22,15 +22,12 @@ require (
 	github.com/go-kratos/kratos/v2 v2.3.1 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-playground/form/v4 v4.2.0 // indirect
 	github.com/go-redis/redis/v8 v8.11.4 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/google/wire v0.5.0 // indirect
-	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -42,12 +39,10 @@ require (
 	github.com/montanaflynn/stats v0.5.0 // indirect
 	github.com/olivere/elastic/v7 v7.0.26 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
-	github.com/pierrec/lz4/v4 v4.1.15 // indirect
+	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pinguo-icc/bmallsdk v1.0.27 // indirect
 	github.com/pinguo-icc/kratos-library/v2 v2.1.20 // indirect
 	github.com/pinguo-icc/operational-basic-svc v1.1.3 // indirect
-	github.com/pinguo-icc/operations-data-env-svc v1.1.0 // indirect
-	github.com/pinguo-icc/placing-svc v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/qiniu/go-sdk/v7 v7.11.0 // indirect
 	github.com/segmentio/kafka-go v0.4.38 // indirect
@@ -80,6 +75,7 @@ require (
 	google.golang.org/grpc v1.50.1 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apimachinery v0.24.4 // indirect
 )
+
+// replace github.com/pinguo-icc/operational-materials-svc => ../operational-materials-svc
