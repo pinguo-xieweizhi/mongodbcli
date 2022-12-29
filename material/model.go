@@ -731,6 +731,53 @@ type MaterialVersion struct {
 	Localize      []*fieldvalue.Localize            `bson:"localize"`
 }
 
+func (mv *MaterialVersion) GetLocalize() []map[string]*fieldvalue.FieldValue {
+	res := make([]map[string]*fieldvalue.FieldValue, 0, len(mv.Localize))
+	for i := range mv.Localize {
+		loc := mv.Localize[i]
+		res = append(res, loc.GetLocalize())
+	}
+
+	return res
+}
+
+func (mv *MaterialVersion) GetBase() map[string]*fieldvalue.FieldValue {
+	res := make(map[string]*fieldvalue.FieldValue)
+
+	res[pkg.Code_Name] = fieldvalue.TextFieldValue(mv.Name)
+
+	parr := []string{}
+	for _, v := range mv.Platform {
+		parr = append(parr, string(v))
+	}
+	res[pkg.Code_Platform] = &fieldvalue.FieldValue{
+		TextArray: parr,
+	}
+
+	res[pkg.Code_ValidDuration] = &fieldvalue.FieldValue{
+		Period: &mv.ValidDuration,
+	}
+
+	res[pkg.Code_ClientVersion] = &fieldvalue.FieldValue{
+		Version: &mv.ClientVersion,
+	}
+
+	res[pkg.Code_Tag] = &fieldvalue.FieldValue{
+		TextArray: mv.Tag,
+	}
+
+	vip := int64(mv.Vip)
+	res[pkg.Code_VIP] = &fieldvalue.FieldValue{
+		NumberInt: &vip,
+	}
+
+	for k, v := range mv.Custom {
+		res[k] = v
+	}
+
+	return res
+}
+
 func getFieldByCode(code string, fd *api.FieldsDefinition) *api.Field {
 	if fd == nil {
 		return nil
@@ -978,15 +1025,19 @@ type SyncRecoder struct {
 	DBFullColl string
 	Type       int
 	ID         string
+	Scope      string
+	Env        string
 	Err        string
 }
 
-func NewSyncRecoder(dbfc, id, err string, tp int) *SyncRecoder {
+func NewSyncRecoder(dbfc, id, err, scope, env string, tp int) *SyncRecoder {
 	return &SyncRecoder{
 		DBFullColl: dbfc,
 		Type:       tp,
 		ID:         id,
 		Err:        err,
+		Scope:      scope,
+		Env:        env,
 	}
 }
 

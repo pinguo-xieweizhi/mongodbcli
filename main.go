@@ -229,9 +229,9 @@ func main() {
 	// }
 
 	//同步素材
-	// if err := material.SyncMaterials(ctx, dbCli); err != nil {
-	// 	log.Fatal(err)
-	// }
+	if err := material.SyncMaterials(ctx, dbCli); err != nil {
+		log.Fatal(err)
+	}
 
 	// 同步分类
 	// if err := material.SyncMaterialCategorys(ctx, dbCli); err != nil {
@@ -239,12 +239,16 @@ func main() {
 	// }
 
 	// //同步素材位置
-	if err := material.SyncMaterialsPosition(ctx, dbCli); err != nil {
-		log.Fatal(err)
-	}
+	// if err := material.SyncMaterialsPosition(ctx, dbCli); err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	//同步素材位置计划
 	// if err := material.SyncMaterialsPlan(ctx, dbCli); err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// if err := material.ClearMaterials(ctx, dbCli); err != nil {
 	// 	log.Fatal(err)
 	// }
 }

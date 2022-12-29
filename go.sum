@@ -522,6 +522,8 @@ github.com/pinguo-icc/bmallsdk v1.0.27 h1:aXglDkQFB5m0Ug8Dh0hPTGBzDPwv6dfhon9l+r
 github.com/pinguo-icc/bmallsdk v1.0.27/go.mod h1:rJj7MzH+lV20O1hJz0qxCTvroF/0mbBVYvAdPjvTR0U=
 github.com/pinguo-icc/field-definitions v1.1.6-0.20221222021129-8cf7710655d3 h1:9tR3D2NFUNPxcBxMlaQvBqV76CqTt/28Nuf0283+Ev0=
 github.com/pinguo-icc/field-definitions v1.1.6-0.20221222021129-8cf7710655d3/go.mod h1:MFpbjsJq/TyN6fRo4g+0QjFFeCswGLwHPnFaAxh7qWk=
+github.com/pinguo-icc/field-definitions v1.1.6-0.20221227060157-b2ed3b020bc8 h1:RzPUFVmaE2fCBt1POOB4Db3TYCGvaQ9kzSGGJunV/R4=
+github.com/pinguo-icc/field-definitions v1.1.6-0.20221227060157-b2ed3b020bc8/go.mod h1:MFpbjsJq/TyN6fRo4g+0QjFFeCswGLwHPnFaAxh7qWk=
 github.com/pinguo-icc/go-base/v2 v2.5.14/go.mod h1:6KcfXIK/1bknb7AFPKfZwdT7V2JjyWBdEao9MZFtdaE=
 github.com/pinguo-icc/go-base/v2 v2.6.8 h1:RGOvswK11QPlCql6wSr3+HEZksCnGTHRV10j/EVTxaI=
 github.com/pinguo-icc/go-base/v2 v2.6.8/go.mod h1:TzM+HLqQSasaBGRGLeNKG+O+EYmlLC2xNkrggdpICsU=

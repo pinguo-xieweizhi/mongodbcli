@@ -12,7 +12,8 @@
             "program": "${workspaceFolder}",
             "args": [
                 "-mongo-dns",
-                "mongodb://a985645edaa0f43f8a2a35e4e541ef5e-1339485449.cn-northwest-1.elb.amazonaws.com.cn:27017/?readPreference=primary&directConnection=true&ssl=false",
+               // "mongodb://a985645edaa0f43f8a2a35e4e541ef5e-1339485449.cn-northwest-1.elb.amazonaws.com.cn:27017/?readPreference=primary&directConnection=true&ssl=false",
+                "mongodb://root:Oldgirl20220402@dds-bp18678321e991f41210-pub.mongodb.rds.aliyuncs.com:3717,dds-bp18678321e991f42162-pub.mongodb.rds.aliyuncs.com:3717/admin?replicaSet=mgset-59911852",
                 "-timeout",
                 "5",
             ]

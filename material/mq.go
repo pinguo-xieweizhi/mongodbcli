@@ -12,10 +12,16 @@ import (
 )
 
 var (
+	// dev
+	// kafkaAddrs = []string{
+	// 	"a4c75dcbd52214b55bd344496bdb5901-f4ea52a09ad4dc1d.elb.cn-northwest-1.amazonaws.com.cn:32000",
+	// 	"ad435efd7df774eceac057d854557280-e47fe7160bccdf15.elb.cn-northwest-1.amazonaws.com.cn:32000",
+	// 	"a39796aa1f0324c6d9ca4d32e4ced8dd-67c2f7f060c9452a.elb.cn-northwest-1.amazonaws.com.cn:32000",
+	// }
 	kafkaAddrs = []string{
-		"a4c75dcbd52214b55bd344496bdb5901-f4ea52a09ad4dc1d.elb.cn-northwest-1.amazonaws.com.cn:32000",
-		"ad435efd7df774eceac057d854557280-e47fe7160bccdf15.elb.cn-northwest-1.amazonaws.com.cn:32000",
-		"a39796aa1f0324c6d9ca4d32e4ced8dd-67c2f7f060c9452a.elb.cn-northwest-1.amazonaws.com.cn:32000",
+		"47.97.215.66:32000",
+		"118.31.75.196:32000",
+		"118.31.42.178:32000",
 	}
 )
 
@@ -23,7 +29,9 @@ func InitMQ() (event.Sender, func()) {
 	return event.NewKafkaSender(&event.Config{
 		Base: event.BaseConfig{},
 		Write: event.WriteConfig{
-			Addr: kafkaAddrs,
+			Addr:            kafkaAddrs,
+			BatchSize:       1,
+			WriteBackoffMin: 1 * time.Millisecond,
 		},
 		Read: event.ReaderConfig{},
 	})

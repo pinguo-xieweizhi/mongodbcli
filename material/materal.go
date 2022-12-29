@@ -27,7 +27,7 @@ var (
 		"salad":      {"prod", "operation", "dev", "qa", "pre"},
 		"inface":     {"prod", "operation", "dev", "qa", "pre"},
 		"icc":        {"prod", "operation", "dev", "qa", "pre"},
-		// "camera360": {"dev"},
+		// "icc": {"dev"},
 	}
 	dbOldNewMap     = make(map[string]string, 0)
 	dbOldMFieldMap  = make(map[string]string, 0)
@@ -49,6 +49,35 @@ func init() {
 			dbOldPosNewMap[oldPosDbName] = newMDBName
 		}
 	}
+}
+
+func ClearMaterials(ctx context.Context, client *mongo.Client) error {
+	for _, new := range dbOldNewMap {
+		log.Printf("========= clear material %s start===========\n", new)
+
+		newMDB := dao.NewMongodbDAO(client.Database(new), "material")
+
+		if err := doClearMaterials(newMDB); err != nil {
+			log.Printf("clear material %s  error :%v", new, err)
+		}
+
+		log.Printf("==========  clear material %s end \n", new)
+	}
+
+	return nil
+}
+
+func doClearMaterials(newM dao.MongodbDAO) error {
+	t := time.UnixMilli(1669824000000)
+	filter := primitive.M{"versions.updatedAt": primitive.M{"$gt": t}}
+	de, err := newM.Collection().DeleteMany(context.Background(), filter)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(de)
+
+	return nil
 }
 
 func SyncMaterials(ctx context.Context, client *mongo.Client) error {
@@ -90,7 +119,7 @@ func SyncMaterials(ctx context.Context, client *mongo.Client) error {
 func doSyncMaterial(_ context.Context, oldm, newM, field dao.MongodbDAO, mq event.Sender, scope, env string) error {
 	//test
 	// ctx := context.Background()
-	// id := "632d5fded3806c045b9e3bde"
+	// id := "62d910438f4854bca96eb5dd"
 	// v, err := getSingleMaterial(ctx, id, oldm)
 	// if err != nil {
 	// 	return err
@@ -108,22 +137,26 @@ func doSyncMaterial(_ context.Context, oldm, newM, field dao.MongodbDAO, mq even
 	// nm := v.convert(fd)
 	// b, _ = json.Marshal(nm)
 	// fmt.Println(string(b))
-
+	// for i := range nm.Versions {
+	// 	if err := fieldvalue.Validate(&nm.Versions[i], fd); err != nil {
+	// 		return err
+	// 	}
+	// }
 	// count, _ := newM.Collection().CountDocuments(ctx, primitive.M{"_id": nm.ID})
 	// if count > 0 {
 	// 	if _, err := newM.Collection().DeleteOne(ctx, primitive.M{"_id": nm.ID}); err != nil {
 	// 		fmt.Println(err)
 	// 	}
 	// }
-
-	// if _, err := newM.Collection().DeleteOne(ctx, primitive.M{"_id": nm.ID}); err != nil {
-	// 	fmt.Println(err)
-	// }
 	// if _, err := newM.Collection().UpdateOne(
 	// 	ctx, primitive.M{"_id": nm.ID}, op.Set(nm),
 	// 	options.Update().SetUpsert(true),
 	// ); err != nil {
 	// 	return err
+	// }
+
+	// if err := sendMaterialCreateMessage(ctx, mq, scope, env, []*Material{nm}); err != nil {
+	// 	fmt.Printf("send material msg fail, err: %s", err.Error())
 	// }
 
 	ctx := context.Background()
@@ -150,6 +183,8 @@ func doSyncMaterial(_ context.Context, oldm, newM, field dao.MongodbDAO, mq even
 						oldm.Collection().Name(),
 						v.ID.Hex(),
 						err.Error(),
+						scope,
+						env,
 						0,
 					))
 
@@ -160,6 +195,26 @@ func doSyncMaterial(_ context.Context, oldm, newM, field dao.MongodbDAO, mq even
 			}
 
 			nm := v.convert(fd)
+			// 同步数据不校验 即使数据不正确也应该同步 用户下一次编辑的时候会提示错误修正即可
+			// var verr error
+			// for i := range nm.Versions {
+			// 	if verr = fieldvalue.Validate(&nm.Versions[i], fd); verr != nil {
+			// 		materialSyncErr = append(materialSyncErr, NewSyncRecoder(
+			// 			oldm.Collection().Name(),
+			// 			v.ID.Hex(),
+			// 			verr.Error(),
+			// 			scope,
+			// 			env,
+			// 			0,
+			// 		))
+
+			// 		break
+			// 	}
+			// }
+			// if verr != nil {
+			// 	continue
+			// }
+
 			count, _ := newM.Collection().CountDocuments(ctx, primitive.M{"_id": nm.ID})
 			if count > 0 {
 				if _, err := newM.Collection().DeleteOne(ctx, primitive.M{"_id": nm.ID}); err != nil {
@@ -176,6 +231,8 @@ func doSyncMaterial(_ context.Context, oldm, newM, field dao.MongodbDAO, mq even
 					oldm.Collection().Name(),
 					v.ID.Hex(),
 					err.Error(),
+					scope,
+					env,
 					0,
 				))
 
@@ -258,6 +315,8 @@ func doSyncMaterialCategory(
 						oldm.Collection().Name(),
 						v.ID.Hex(),
 						err.Error(),
+						scope,
+						env,
 						0,
 					))
 
@@ -286,6 +345,8 @@ func doSyncMaterialCategory(
 					oldm.Collection().Name(),
 					v.ID.Hex(),
 					err.Error(),
+					scope,
+					env,
 					0,
 				))
 
@@ -366,6 +427,8 @@ func wirteCvs(app string, recoder []*SyncRecoder) error {
 			rowCSV = append(rowCSV, "category")
 		}
 		rowCSV = append(rowCSV, v.Err)
+		rowCSV = append(rowCSV, v.Scope)
+		rowCSV = append(rowCSV, v.Env)
 		rows = append(rows, rowCSV)
 	}
 

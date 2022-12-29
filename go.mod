@@ -3,7 +3,7 @@ module github.com/pinguo-icc/mongodbcli
 go 1.18
 
 require (
-	github.com/pinguo-icc/field-definitions v1.1.6-0.20221222021129-8cf7710655d3
+	github.com/pinguo-icc/field-definitions v1.1.6-0.20221227060157-b2ed3b020bc8
 	github.com/pinguo-icc/go-base/v2 v2.6.8
 	github.com/pinguo-icc/go-lib/v2 v2.1.11
 	github.com/pinguo-icc/kratos-library v1.0.0
