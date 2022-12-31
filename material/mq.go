@@ -7,7 +7,6 @@ import (
 
 	"github.com/pinguo-icc/go-base/v2/event"
 	mapi "github.com/pinguo-icc/operational-materials-svc/api"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -45,7 +44,7 @@ func sendMaterialCreateMessage(ctx context.Context, mq event.Sender, scope, env 
 	}
 	msg := []event.Event{}
 	for _, v := range datas {
-		traceID := primitive.NewObjectID().Hex()
+		traceID := v.ID.Hex() + "sync_by_cli"
 		fmt.Println("traceID", traceID)
 		oe := &mapi.MaterialOperateEvent{
 			Data:        []*mapi.Material{convertMaterialToAPI(ctx, v)},
@@ -78,7 +77,7 @@ func sendCategoryCreateMessage(ctx context.Context, mq event.Sender, scope, env 
 	}
 	msg := []event.Event{}
 	for _, v := range datas {
-		traceID := primitive.NewObjectID().Hex()
+		traceID := v.ID.Hex() + "sync_by_cli"
 		fmt.Println("traceID", traceID)
 		oe := &mapi.CategoryOperateEvent{
 			Data:        []*mapi.Category{convertCategoryToAPI(ctx, v, false)},
@@ -110,7 +109,7 @@ func sendMaterialPositionCreateMessage(ctx context.Context, mq event.Sender, sco
 	}
 	msg := []event.Event{}
 	for _, v := range datas {
-		traceID := primitive.NewObjectID().Hex()
+		traceID := v.ID.Hex() + "sync_by_cli"
 		fmt.Println("traceID", traceID)
 		oe := &mapi.MaterialPositionOperateEvent{
 			Data:        []*mapi.MaterialPosition{materialPositionToAPI(v)},
@@ -143,7 +142,7 @@ func sendMaterialPlanCreateMessage(ctx context.Context, mq event.Sender, scope, 
 	}
 	msg := []event.Event{}
 	for _, v := range datas {
-		traceID := primitive.NewObjectID().Hex()
+		traceID := v.ID.Hex() + "sync_by_cli"
 		fmt.Println("traceID", traceID)
 		oe := &mapi.MaterialPlanOperateEvent{
 			Data:        []*mapi.Plan{cplan.APIPlan(v)},

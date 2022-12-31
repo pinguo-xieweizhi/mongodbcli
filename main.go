@@ -174,6 +174,7 @@ func init() {
 type option struct {
 	MongoDNS string
 	Timeout  int
+	Action   string
 }
 
 func (o *option) validate() error {
@@ -187,6 +188,7 @@ func (o *option) validate() error {
 func (o *option) addFlags(fs *flag.FlagSet) {
 	fs.StringVar(&o.MongoDNS, "mongo-dns", "", "the mongoDB connect address")
 	fs.IntVar(&o.Timeout, "timeout", 1, "the exec timeout setting,default 1 minute")
+	fs.StringVar(&o.Action, "action", "all", "the exec action,default all")
 }
 
 func initOptions(fs *flag.FlagSet, args ...string) (*option, error) {

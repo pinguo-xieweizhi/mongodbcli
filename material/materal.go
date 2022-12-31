@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pinguo-icc/field-definitions/api"
@@ -20,20 +21,23 @@ import (
 
 var (
 	scope = map[string][]string{
-		"videobeats": {"prod", "operation", "dev", "qa", "pre"},
-		"camera360":  {"prod", "operation", "dev", "qa", "pre"},
-		"idphoto":    {"prod", "operation", "dev", "qa", "pre"},
-		"mix":        {"prod", "operation", "dev", "qa", "pre"},
-		"salad":      {"prod", "operation", "dev", "qa", "pre"},
-		"inface":     {"prod", "operation", "dev", "qa", "pre"},
-		"icc":        {"prod", "operation", "dev", "qa", "pre"},
-		// "icc": {"dev"},
+		// "videobeats": {"prod", "operation", "dev", "qa", "pre"},
+		// "camera360":  {"prod", "operation", "dev", "qa", "pre"},
+		// "idphoto":    {"prod", "operation", "dev", "qa", "pre"},
+		// "mix":        {"prod", "operation", "dev", "qa", "pre"},
+		// "salad":      {"prod", "operation", "dev", "qa", "pre"},
+		// "inface":     {"prod", "operation", "dev", "qa", "pre"},
+		// "icc":        {"prod", "operation", "dev", "qa", "pre"},
+		// "april": {"prod", "operation", "dev", "qa", "pre"},
+		"icc": {"dev"},
 	}
-	dbOldNewMap     = make(map[string]string, 0)
-	dbOldMFieldMap  = make(map[string]string, 0)
-	dbOldPosNewMap  = make(map[string]string, 0)
-	materialSyncErr = make([]*SyncRecoder, 0, 100)
-	categorySyncErr = make([]*SyncRecoder, 0, 100)
+	dbOldNewMap             = make(map[string]string, 0)
+	dbOldMFieldMap          = make(map[string]string, 0)
+	dbOldPosNewMap          = make(map[string]string, 0)
+	categorySyncErr         = make([]*SyncRecoder, 0, 100)
+	materialPositionSyncErr = make([]*SyncRecoder, 0, 100)
+	planPositionSyncErr     = make([]*SyncRecoder, 0, 100)
+	wg                      = sync.WaitGroup{}
 )
 
 func init() {
@@ -82,41 +86,65 @@ func doClearMaterials(newM dao.MongodbDAO) error {
 
 func SyncMaterials(ctx context.Context, client *mongo.Client) error {
 	mq, cancel := InitMQ()
-	defer cancel()
+
 	for old, new := range dbOldNewMap {
-		log.Printf("========= sync material %s to %s start===========\n", old, new)
-		fdb, ok := dbOldMFieldMap[old]
-		if !ok {
-			log.Printf("get field db name by material name %s fail \n", old)
-
-			return fmt.Errorf("get field db name by material name")
-		}
-		oldMDB := dao.NewMongodbDAO(client.Database(old), "material")
-		newMDB := dao.NewMongodbDAO(client.Database(new), "material")
-		fieldDB := dao.NewMongodbDAO(client.Database(fdb), "fields_definition")
-
-		sps := strings.Split(old, "_")
-		if len(sps) < 2 {
-			return fmt.Errorf("cant get scope and env")
-		}
-
-		scope, env := sps[0], sps[1]
-
-		if err := doSyncMaterial(ctx, oldMDB, newMDB, fieldDB, mq, scope, env); err != nil {
-			log.Printf("sync style %s to %s error :%v", old, new, err)
-		}
-
-		log.Printf("========== run sync %s to %s end \n", old, new)
+		wg.Add(1)
+		go func(o, n string) {
+			if err := materialSync(ctx, o, n, mq, client); err != nil {
+				fmt.Println(o, n, err.Error())
+			}
+		}(old, new)
 	}
 
-	if len(materialSyncErr) > 0 {
-		return wirteCvs("sync_material", materialSyncErr)
+	wg.Wait()
+	cancel()
+
+	return nil
+}
+
+func materialSync(ctx context.Context, old, new string, mq event.Sender, client *mongo.Client) error {
+	defer func() {
+		wg.Done()
+	}()
+
+	log.Printf("========= sync material %s to %s start===========\n", old, new)
+	fdb, ok := dbOldMFieldMap[old]
+	if !ok {
+		log.Printf("get field db name by material name %s fail \n", old)
+
+		return fmt.Errorf("get field db name by material name")
+	}
+	oldMDB := dao.NewMongodbDAO(client.Database(old), "material")
+	newMDB := dao.NewMongodbDAO(client.Database(new), "material")
+	fieldDB := dao.NewMongodbDAO(client.Database(fdb), "fields_definition")
+
+	sps := strings.Split(old, "_")
+	if len(sps) < 2 {
+		return fmt.Errorf("cant get scope and env")
+	}
+
+	scope, env := sps[0], sps[1]
+
+	materialSyncRecoder, err := doSyncMaterial(ctx, oldMDB, newMDB, fieldDB, mq, scope, env)
+	if err != nil {
+		log.Printf("sync style %s to %s error :%v", old, new, err)
+	}
+
+	log.Printf("========= sync material %s to %s end=========== materialsSyncrecoder num %d\n", old, new, len(materialSyncRecoder))
+
+	if len(materialSyncRecoder) > 0 {
+		return wirteCvs(fmt.Sprintf("sync_material_%s_%s", scope, env), materialSyncRecoder)
 	}
 
 	return nil
 }
 
-func doSyncMaterial(_ context.Context, oldm, newM, field dao.MongodbDAO, mq event.Sender, scope, env string) error {
+func doSyncMaterial(
+	_ context.Context,
+	oldm, newM, field dao.MongodbDAO,
+	mq event.Sender, scope, env string,
+) ([]*SyncRecoder, error) {
+	syncRecoder := make([]*SyncRecoder, 0, 100)
 	//test
 	// ctx := context.Background()
 	// id := "62d910438f4854bca96eb5dd"
@@ -166,7 +194,7 @@ func doSyncMaterial(_ context.Context, oldm, newM, field dao.MongodbDAO, mq even
 		materilCreats := make([]*Material, 0)
 		res, hn, err := getSyncDatats[OldMaterial](ctx, oldm, page)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		fdCache := make(map[string]*api.FieldsDefinition)
@@ -179,7 +207,7 @@ func doSyncMaterial(_ context.Context, oldm, newM, field dao.MongodbDAO, mq even
 				fd, err = getFieldDefine(ctx, v.TypeID, FieldCategoryMaterial, field)
 				if err != nil {
 					log.Printf("get field define by %s error: %s", v.TypeID, err)
-					materialSyncErr = append(materialSyncErr, NewSyncRecoder(
+					syncRecoder = append(syncRecoder, NewSyncRecoder(
 						oldm.Collection().Name(),
 						v.ID.Hex(),
 						err.Error(),
@@ -227,7 +255,7 @@ func doSyncMaterial(_ context.Context, oldm, newM, field dao.MongodbDAO, mq even
 				options.Update().SetUpsert(true),
 			); err != nil {
 				log.Printf("insert %s error: %s", v.TypeID, err)
-				materialSyncErr = append(materialSyncErr, NewSyncRecoder(
+				syncRecoder = append(syncRecoder, NewSyncRecoder(
 					oldm.Collection().Name(),
 					v.ID.Hex(),
 					err.Error(),
@@ -249,7 +277,7 @@ func doSyncMaterial(_ context.Context, oldm, newM, field dao.MongodbDAO, mq even
 		hasNext = hn
 	}
 
-	return nil
+	return syncRecoder, nil
 }
 
 func SyncMaterialCategorys(ctx context.Context, client *mongo.Client) error {
@@ -311,7 +339,7 @@ func doSyncMaterialCategory(
 				fd, err = getFieldDefine(ctx, v.TypeID, FieldCategoryMaterialCate, field)
 				if err != nil {
 					log.Printf("get field define by %s error: %s", v.TypeID, err)
-					materialSyncErr = append(materialSyncErr, NewSyncRecoder(
+					categorySyncErr = append(categorySyncErr, NewSyncRecoder(
 						oldm.Collection().Name(),
 						v.ID.Hex(),
 						err.Error(),
@@ -341,7 +369,7 @@ func doSyncMaterialCategory(
 				options.Update().SetUpsert(true),
 			); err != nil {
 				log.Printf("insert %s error: %s", v.TypeID, err)
-				materialSyncErr = append(materialSyncErr, NewSyncRecoder(
+				categorySyncErr = append(categorySyncErr, NewSyncRecoder(
 					oldm.Collection().Name(),
 					v.ID.Hex(),
 					err.Error(),
