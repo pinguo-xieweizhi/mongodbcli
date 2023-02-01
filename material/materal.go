@@ -17,19 +17,20 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 var (
 	scope = map[string][]string{
-		// "videobeats": {"prod", "operation", "dev", "qa", "pre"},
-		// "camera360":  {"prod", "operation", "dev", "qa", "pre"},
-		// "idphoto":    {"prod", "operation", "dev", "qa", "pre"},
-		// "mix":        {"prod", "operation", "dev", "qa", "pre"},
-		// "salad":      {"prod", "operation", "dev", "qa", "pre"},
-		// "inface":     {"prod", "operation", "dev", "qa", "pre"},
-		// "icc":        {"prod", "operation", "dev", "qa", "pre"},
-		// "april": {"prod", "operation", "dev", "qa", "pre"},
-		"icc": {"dev"},
+		"videobeats": {"prod", "operation", "dev", "qa", "pre"},
+		"camera360":  {"prod", "operation", "dev", "qa", "pre"},
+		"idphoto":    {"prod", "operation", "dev", "qa", "pre"},
+		"mix":        {"prod", "operation", "dev", "qa", "pre"},
+		"salad":      {"prod", "operation", "dev", "qa", "pre"},
+		"inface":     {"prod", "operation", "dev", "qa", "pre"},
+		"icc":        {"prod", "operation", "dev", "qa", "pre"},
+		"april":      {"prod", "operation", "dev", "qa", "pre"},
+		// "videobeats": {"operation"},
 	}
 	dbOldNewMap             = make(map[string]string, 0)
 	dbOldMFieldMap          = make(map[string]string, 0)
@@ -38,6 +39,24 @@ var (
 	materialPositionSyncErr = make([]*SyncRecoder, 0, 100)
 	planPositionSyncErr     = make([]*SyncRecoder, 0, 100)
 	wg                      = sync.WaitGroup{}
+
+	excludeMaterialIDs = map[string]sets.String{
+		"videobeats_operation": sets.NewString(
+			"63a51a0fe99dc512b16e916b", "63bb8379b52c0f797ff1810f", "63bb83dcbdf592838b09a5d9",
+			"63a52418d72a90f71ab08c19", "63bbb554b52c0f797ff18112", "63bbb4fbb52c0f797ff18111",
+			"63bbb521bdf592838b09a5da", "63bb83a7b52c0f797ff18110", "63a523e9d72a90f71ab08c18",
+			"638416db53b5477a729ed71f", "6384176de1da649b2cbffedf", "638417287e366f7d1575903b",
+			"63745112e26f5473a81fd750", "637451938e9024f2dd0f428c", "63745166e26f5473a81fd751",
+			"6250134db404242ef7d2c218", "6305ea701fbbb4d2e0a0159e", "634d3053a2a8727060a9f0a8",
+			"634d30a5a2a8727060a9f0aa", "634d306ea2a8727060a9f0a9", "634d302718ff2d1020834187",
+			"62aa95005ae6ac2543af58a7", "6348d692a2a8727060a9f0a0", "62f9e6fb6a3e09b6bbc52bb6",
+			"626506c61ce80fa6e768f41b", "630c79f31fbbb4d2e0a015a6", "630c7a4b6a3e09b6bbc52bdd",
+			"619f288b9d06e8d7a7b537c0", "619f28729d06e8d7a7b537bf", "61e7c4dc253a4e1487ec9672",
+			"61e7c4ba253a4e1487ec9671", "62b27976f24cc3cfb0168e0a", "62b2795c5ae6ac2543af58bb",
+			"630327e06a3e09b6bbc52bbb", "62b405ecf24cc3cfb0168e10", "62b406945ae6ac2543af58bf",
+			"6306eb731fbbb4d2e0a015a1",
+		),
+	}
 )
 
 func init() {
@@ -139,6 +158,16 @@ func materialSync(ctx context.Context, old, new string, mq event.Sender, client 
 	return nil
 }
 
+func isExcludeMaterialsID(scope, env, id string) bool {
+	key := scope + "_" + env
+	setIDs, ok := excludeMaterialIDs[key]
+	if !ok {
+		return false
+	}
+
+	return setIDs.Has(id)
+}
+
 func doSyncMaterial(
 	_ context.Context,
 	oldm, newM, field dao.MongodbDAO,
@@ -199,6 +228,11 @@ func doSyncMaterial(
 
 		fdCache := make(map[string]*api.FieldsDefinition)
 		for _, v := range res {
+			// 排除一些产品空间中的素材不同步
+			if !isExcludeMaterialsID(scope, env, v.ID.Hex()) {
+				continue
+			}
+
 			var fd *api.FieldsDefinition
 			key := fmt.Sprintf("%s_%d", v.TypeID, FieldCategoryMaterial)
 			if fdc, ok := fdCache[key]; ok {
@@ -394,7 +428,7 @@ func doSyncMaterialCategory(
 	return nil
 }
 
-func getSyncDatats[T OldCategory | OldMaterial | MaterialPosition | Plan](
+func getSyncDatats[T OldCategory | OldMaterial | MaterialPosition | Plan | Material](
 	ctx context.Context, mdb dao.MongodbDAO, page int32,
 ) ([]*T, bool, error) {
 	opts := &FindOptions{}
@@ -420,6 +454,19 @@ func getSingleMaterial(ctx context.Context, id string, mdb dao.MongodbDAO) (*Old
 	}
 
 	doc := new(OldMaterial)
+
+	err = mdb.Collection().FindOne(ctx, primitive.M{"_id": oid}).Decode(doc)
+
+	return doc, err
+}
+
+func getSingleNewMaterial(ctx context.Context, id string, mdb dao.MongodbDAO) (*Material, error) {
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	doc := new(Material)
 
 	err = mdb.Collection().FindOne(ctx, primitive.M{"_id": oid}).Decode(doc)
 

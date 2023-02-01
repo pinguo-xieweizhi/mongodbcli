@@ -4,12 +4,14 @@ go 1.18
 
 require (
 	github.com/pinguo-icc/field-definitions v1.1.6-0.20221227060157-b2ed3b020bc8
-	github.com/pinguo-icc/go-base/v2 v2.6.8
+	github.com/pinguo-icc/go-base/v2 v2.6.9
 	github.com/pinguo-icc/go-lib/v2 v2.1.11
 	github.com/pinguo-icc/kratos-library v1.0.0
+	github.com/pinguo-icc/operational-h5-svc v1.1.8
 	github.com/pinguo-icc/operational-materials-svc v1.0.1-0.20221222093630-e565d9a2a148
 	go.mongodb.org/mongo-driver v1.10.0
 	google.golang.org/protobuf v1.28.1
+	k8s.io/apimachinery v0.24.4
 )
 
 require (
@@ -75,7 +77,6 @@ require (
 	google.golang.org/grpc v1.50.1 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/apimachinery v0.24.4 // indirect
 )
 
 // replace github.com/pinguo-icc/operational-materials-svc => ../operational-materials-svc

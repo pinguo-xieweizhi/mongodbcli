@@ -1,6 +1,8 @@
 package material
 
 import (
+	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -8,6 +10,7 @@ import (
 	"github.com/pinguo-icc/field-definitions/pkg"
 	"github.com/pinguo-icc/field-definitions/pkg/fieldvalue"
 	"github.com/pinguo-icc/go-base/v2/version"
+	"github.com/pinguo-icc/go-lib/v2/dao"
 	ldao "github.com/pinguo-icc/go-lib/v2/dao"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -610,7 +613,7 @@ func (om *OldMaterial) convert(fd *api.FieldsDefinition) *Material {
 
 	mv := MaterialVersion{
 		VersionID:     primitive.NewObjectID(),
-		VersionName:   "默认版本",
+		VersionName:   "初始版本",
 		Name:          om.Name,
 		Vip:           om.IsVIP,
 		Tag:           om.TagID,
@@ -713,6 +716,23 @@ type Material struct {
 	Versions  []MaterialVersion  `bson:"versions"` // 素材多版本
 }
 
+func (m *Material) addVersion(mv MaterialVersion) {
+	m.Versions = append(m.Versions, mv)
+}
+
+func (m *Material) getVersionIDByKey(key string) (string, bool) {
+	for i, v := range m.Versions {
+		if v.getKey(m.ID.Hex()) == key {
+			if i == 0 {
+				return "", true
+			}
+			return v.VersionID.Hex(), true
+		}
+	}
+
+	return "", false
+}
+
 type MaterialVersion struct {
 	VersionID     primitive.ObjectID                `bson:"versionID"`
 	VersionName   string                            `bson:"versionName"`
@@ -729,6 +749,19 @@ type MaterialVersion struct {
 	Status        string                            `bson:"status"`
 	Custom        map[string]*fieldvalue.FieldValue `bson:"custom"`
 	Localize      []*fieldvalue.Localize            `bson:"localize"`
+}
+
+func (m *MaterialVersion) getKey(id string) string {
+	key := id
+	if m.Vip > 0 {
+		key = fmt.Sprintf("%s%t", key, true)
+	} else {
+		key = fmt.Sprintf("%s%t", key, true)
+	}
+
+	key = fmt.Sprintf("%s%d%d", key, m.ValidDuration.Begin, m.ValidDuration.End)
+
+	return key
 }
 
 func (mv *MaterialVersion) GetLocalize() []map[string]*fieldvalue.FieldValue {
@@ -1112,6 +1145,134 @@ type Plan struct {
 	*EditInfo             `bson:",inline"`
 }
 
+var cacheOverrideVersionID = make(map[string]string)
+
+func (p *Plan) newOverrideMaterialsVersion(mdb dao.MongodbDAO) (bool, error) {
+	if p.PlacingContent == nil {
+		return false, nil
+	}
+	hasOverride := false
+	for _, v := range p.PlacingContent {
+		if v.Categories != nil {
+			for _, c := range v.Categories {
+				if c.Materials != nil {
+					for _, m := range c.Materials {
+						if m.hasOverride() {
+							key := m.getCacheKey()
+							material, err := getSingleNewMaterial(context.Background(), m.ID, mdb)
+							if err != nil {
+								return false, err
+							}
+
+							vid, find := material.getVersionIDByKey(key)
+							if find {
+								if vid != "" {
+									m.VersionID = vid
+									hasOverride = true
+									cacheOverrideVersionID[key] = vid
+								}
+								continue
+							}
+
+							// 需要生成新的素材版本支持覆盖数据
+							defv := material.Versions[0]
+							if versionID, ok := cacheOverrideVersionID[key]; ok {
+								ovid, err := primitive.ObjectIDFromHex(versionID)
+								if err != nil {
+									return false, err
+								}
+
+								defv.VersionID = ovid
+							} else {
+								defv.VersionID = primitive.NewObjectID()
+							}
+
+							if m.VIP != nil {
+								if *m.VIP == true {
+									defv.Vip = 1
+								} else {
+									defv.Vip = 0
+								}
+							}
+
+							if m.Period != nil {
+								defv.ValidDuration.Begin = m.Period.Begin.Unix()
+								defv.ValidDuration.End = m.Period.End.Unix()
+							}
+
+							defv.VersionName = fmt.Sprintf("覆盖版本%d", len(material.Versions))
+							material.addVersion(defv)
+							// TODO: 更新素材
+
+							m.VersionID = defv.VersionID.Hex()
+							hasOverride = true
+							cacheOverrideVersionID[key] = m.VersionID
+						}
+					}
+				}
+			}
+		}
+
+		if v.Materials != nil {
+			for _, m := range v.Materials {
+				if m.hasOverride() {
+					key := m.getCacheKey()
+					material, err := getSingleNewMaterial(context.Background(), m.ID, mdb)
+					if err != nil {
+						return false, err
+					}
+
+					vid, find := material.getVersionIDByKey(key)
+					if find {
+						if vid != "" {
+							m.VersionID = vid
+							hasOverride = true
+							cacheOverrideVersionID[key] = vid
+						}
+						continue
+					}
+
+					// 需要生成新的素材版本支持覆盖数据
+					defv := material.Versions[0]
+					if versionID, ok := cacheOverrideVersionID[key]; ok {
+						ovid, err := primitive.ObjectIDFromHex(versionID)
+						if err != nil {
+							return false, err
+						}
+
+						defv.VersionID = ovid
+					} else {
+						defv.VersionID = primitive.NewObjectID()
+					}
+
+					if m.VIP != nil {
+						if *m.VIP == true {
+							defv.Vip = 1
+						} else {
+							defv.Vip = 0
+						}
+					}
+
+					if m.Period != nil {
+						defv.ValidDuration.Begin = m.Period.Begin.Unix()
+						defv.ValidDuration.End = m.Period.End.Unix()
+					}
+
+					defv.VersionName = fmt.Sprintf("覆盖版本%d", len(material.Versions))
+					material.addVersion(defv)
+					// TODO: 更新素材
+
+					m.VersionID = defv.VersionID.Hex()
+					hasOverride = true
+					cacheOverrideVersionID[key] = vid
+				}
+			}
+		}
+	}
+
+	return hasOverride, nil
+}
+
 type UserSelectionType uint8
 
 type UserSelection struct {
@@ -1155,9 +1316,46 @@ type PlacingMaterial struct {
 	Period    *Period `bson:"period,omitempty"`
 }
 
+func (pm *PlacingMaterial) hasOverride() bool {
+	if pm.VIP != nil {
+		return true
+	}
+
+	if pm.Period != nil {
+		return true
+	}
+
+	return false
+}
+
+func (pm *PlacingMaterial) getCacheKey() string {
+	key := pm.ID
+	if pm.VIP != nil {
+		key = fmt.Sprintf("%s%t", key, *pm.VIP)
+	}
+
+	if pm.Period != nil {
+		key = fmt.Sprintf("%s%d%d", key, pm.Period.Begin.Unix(), pm.Period.End.Unix())
+	}
+
+	return key
+}
+
+func (pm *PlacingMaterial) setVersionID(versionID string) {
+	pm.VersionID = versionID
+}
+
 type Period struct {
 	Begin time.Time `bson:"begin,omitempty"`
 	End   time.Time `bson:"end,omitempty"`
+}
+
+type H5PropertiesWithActName struct {
+	ID        string
+	Attribute string
+	Style     string
+	ActID     string
+	ActName   string
 }
 
 const (
