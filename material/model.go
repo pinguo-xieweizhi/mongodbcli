@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pinguo-icc/field-definitions/api"
@@ -12,7 +13,9 @@ import (
 	"github.com/pinguo-icc/go-base/v2/version"
 	"github.com/pinguo-icc/go-lib/v2/dao"
 	ldao "github.com/pinguo-icc/go-lib/v2/dao"
+	"github.com/pinguo-icc/kratos-library/mongo/op"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type DatePeriod struct {
@@ -722,10 +725,12 @@ func (m *Material) addVersion(mv MaterialVersion) {
 
 func (m *Material) getVersionIDByKey(key string) (string, bool) {
 	for i, v := range m.Versions {
-		if v.getKey(m.ID.Hex()) == key {
+		mvkey := v.getKey(m.ID.Hex())
+		if mvkey == key || strings.HasPrefix(mvkey, key) {
 			if i == 0 {
 				return "", true
 			}
+
 			return v.VersionID.Hex(), true
 		}
 	}
@@ -756,7 +761,7 @@ func (m *MaterialVersion) getKey(id string) string {
 	if m.Vip > 0 {
 		key = fmt.Sprintf("%s%t", key, true)
 	} else {
-		key = fmt.Sprintf("%s%t", key, true)
+		key = fmt.Sprintf("%s%t", key, false)
 	}
 
 	key = fmt.Sprintf("%s%d%d", key, m.ValidDuration.Begin, m.ValidDuration.End)
@@ -1147,7 +1152,7 @@ type Plan struct {
 
 var cacheOverrideVersionID = make(map[string]string)
 
-func (p *Plan) newOverrideMaterialsVersion(mdb dao.MongodbDAO) (bool, error) {
+func (p *Plan) newOverrideMaterialsVersion(mdb dao.MongodbDAO, scope, env string) (bool, error) {
 	if p.PlacingContent == nil {
 		return false, nil
 	}
@@ -1158,6 +1163,9 @@ func (p *Plan) newOverrideMaterialsVersion(mdb dao.MongodbDAO) (bool, error) {
 				if c.Materials != nil {
 					for _, m := range c.Materials {
 						if m.hasOverride() {
+							if isExcludeMaterialsID(scope, env, m.ID) {
+								continue
+							}
 							key := m.getCacheKey()
 							material, err := getSingleNewMaterial(context.Background(), m.ID, mdb)
 							if err != nil {
@@ -1203,6 +1211,13 @@ func (p *Plan) newOverrideMaterialsVersion(mdb dao.MongodbDAO) (bool, error) {
 							defv.VersionName = fmt.Sprintf("覆盖版本%d", len(material.Versions))
 							material.addVersion(defv)
 							// TODO: 更新素材
+							if _, err := mdb.Collection().UpdateOne(
+								context.Background(), primitive.M{"_id": material.ID}, op.Set(material),
+								options.Update().SetUpsert(true),
+							); err != nil {
+								return false, err
+							}
+							fmt.Printf("%s,%s 新增了覆盖版本", material.ID.Hex(), defv.VersionID.Hex())
 
 							m.VersionID = defv.VersionID.Hex()
 							hasOverride = true
@@ -1261,6 +1276,13 @@ func (p *Plan) newOverrideMaterialsVersion(mdb dao.MongodbDAO) (bool, error) {
 					defv.VersionName = fmt.Sprintf("覆盖版本%d", len(material.Versions))
 					material.addVersion(defv)
 					// TODO: 更新素材
+					if _, err := mdb.Collection().UpdateOne(
+						context.Background(), primitive.M{"_id": material.ID}, op.Set(material),
+						options.Update().SetUpsert(true),
+					); err != nil {
+						return false, err
+					}
+					fmt.Printf("%s,%s 新增了覆盖版本", material.ID.Hex(), defv.VersionID.Hex())
 
 					m.VersionID = defv.VersionID.Hex()
 					hasOverride = true
@@ -1317,6 +1339,10 @@ type PlacingMaterial struct {
 }
 
 func (pm *PlacingMaterial) hasOverride() bool {
+	if pm.VersionID != "" {
+		return false
+	}
+
 	if pm.VIP != nil {
 		return true
 	}

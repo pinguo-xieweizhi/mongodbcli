@@ -22,15 +22,15 @@ import (
 
 var (
 	scope = map[string][]string{
-		"videobeats": {"prod", "operation", "dev", "qa", "pre"},
-		"camera360":  {"prod", "operation", "dev", "qa", "pre"},
-		"idphoto":    {"prod", "operation", "dev", "qa", "pre"},
-		"mix":        {"prod", "operation", "dev", "qa", "pre"},
-		"salad":      {"prod", "operation", "dev", "qa", "pre"},
-		"inface":     {"prod", "operation", "dev", "qa", "pre"},
-		"icc":        {"prod", "operation", "dev", "qa", "pre"},
-		"april":      {"prod", "operation", "dev", "qa", "pre"},
-		// "videobeats": {"operation"},
+		// "videobeats": {"prod", "operation", "dev", "qa", "pre"},
+		// "camera360":  {"prod", "operation", "dev", "qa", "pre"},
+		// "idphoto":    {"prod", "operation", "dev", "qa", "pre"},
+		// "mix":        {"prod", "operation", "dev", "qa", "pre"},
+		// "salad":      {"prod", "operation", "dev", "qa", "pre"},
+		// "inface":     {"prod", "operation", "dev", "qa", "pre"},
+		// "icc":        {"prod", "operation", "dev", "qa", "pre"},
+		// "april":      {"prod", "operation", "dev", "qa", "pre"},
+		"videobeats": {"operation"},
 	}
 	dbOldNewMap             = make(map[string]string, 0)
 	dbOldMFieldMap          = make(map[string]string, 0)

@@ -256,12 +256,18 @@ func DealWithPlanBytraverse(_ context.Context, client *mongo.Client) error {
 			}
 
 			for _, v := range res {
-				hasOverride, err := v.newOverrideMaterialsVersion(mdb)
+				hasOverride, err := v.newOverrideMaterialsVersion(mdb, scope, env)
 				if err != nil {
 					return err
 				}
 				if hasOverride {
-					// TODO: 需更新计划
+					if _, err := db.Collection().UpdateOne(
+						context.Background(), primitive.M{"_id": v.ID}, op.Set(v),
+						options.Update().SetUpsert(true),
+					); err != nil {
+						return err
+					}
+					fmt.Printf("%s计划已更新", v.ID.Hex())
 					count++
 					ids = append(ids, v.ID.Hex())
 					bt, err := json.Marshal(v)
@@ -270,14 +276,13 @@ func DealWithPlanBytraverse(_ context.Context, client *mongo.Client) error {
 					}
 				}
 			}
-
-			bt, err := json.Marshal(cacheOverrideVersionID)
-			if err == nil {
-				fmt.Println(string(bt))
-			}
-
 			page++
 			hasNext = hn
+		}
+
+		bt, err := json.Marshal(cacheOverrideVersionID)
+		if err == nil {
+			fmt.Println(string(bt))
 		}
 
 		if count > 0 {
