@@ -1159,7 +1159,7 @@ func (p *Plan) newOverrideMaterialsVersion(mdb dao.MongodbDAO) (bool, error) {
 					for _, m := range c.Materials {
 						if m.hasOverride() {
 							key := m.getCacheKey()
-							material, err := getSingleNewMaterial(context.Background(), m.ID, mdb)
+							material, err := GetSingleNewMaterial(context.Background(), m.ID, mdb)
 							if err != nil {
 								return false, err
 							}
@@ -1217,7 +1217,7 @@ func (p *Plan) newOverrideMaterialsVersion(mdb dao.MongodbDAO) (bool, error) {
 			for _, m := range v.Materials {
 				if m.hasOverride() {
 					key := m.getCacheKey()
-					material, err := getSingleNewMaterial(context.Background(), m.ID, mdb)
+					material, err := GetSingleNewMaterial(context.Background(), m.ID, mdb)
 					if err != nil {
 						return false, err
 					}

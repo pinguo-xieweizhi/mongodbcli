@@ -14,6 +14,7 @@ import (
 	"github.com/pinguo-icc/go-base/v2/event"
 	"github.com/pinguo-icc/kratos-library/mongo/op"
 	"github.com/pinguo-icc/mongodbcli/material"
+	"github.com/pinguo-icc/mongodbcli/repair"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -263,9 +264,16 @@ func main() {
 		if err := material.DealWithPlanBytraverse(ctx, dbCli); err != nil {
 			log.Fatal(err)
 		}
-	default:
+	case "repairVersionID":
+		// 修复版本id
+		if err := repair.Index(ctx, dbCli); err != nil {
+			log.Fatal(err)
+		}
+	case "h5-type":
 		// 默认修复h5 type 类型
 		exec(ctx, dbCli)
+	default:
+		panic("err action")
 	}
 
 }

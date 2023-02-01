@@ -460,7 +460,7 @@ func getSingleMaterial(ctx context.Context, id string, mdb dao.MongodbDAO) (*Old
 	return doc, err
 }
 
-func getSingleNewMaterial(ctx context.Context, id string, mdb dao.MongodbDAO) (*Material, error) {
+func GetSingleNewMaterial(ctx context.Context, id string, mdb dao.MongodbDAO) (*Material, error) {
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
