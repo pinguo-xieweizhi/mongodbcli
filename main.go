@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/pinguo-icc/go-base/v2/event"
+	"github.com/pinguo-icc/go-lib/dao"
 	"github.com/pinguo-icc/kratos-library/mongo/op"
 	"github.com/pinguo-icc/mongodbcli/material"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -152,6 +153,64 @@ func fixH5NodeType(ctx context.Context, coll *mongo.Collection, t *Activity) {
 	log.Printf("%s %d  nodes has been reset type %d that belown %s .\n", coll.Name(), u.ModifiedCount, t.Type, t.ID.Hex())
 }
 
+func fixH5NodeActive(ctx context.Context, coll *mongo.Collection, t *Activity) {
+	if t == nil {
+		return
+	}
+
+	filter := primitive.M{
+		"pid": t.ID,
+		//"type": op.Ne(t.Type),
+	}
+
+	update := primitive.M{"$set": primitive.M{"active": t.Active}}
+
+	u, err := coll.UpdateMany(ctx, filter, update)
+	if err != nil {
+		return
+	}
+
+	log.Printf("%s %d  nodes has been reset active %t that belown %s .\n", coll.Name(), u.ModifiedCount, t.Active, t.ID.Hex())
+}
+
+// fixH5ActivityActStatus 修复h5上下架状态
+func fixH5ActivityActStatus(ctx context.Context, coll *mongo.Collection) error {
+	filter := primitive.M{
+		"pid":       primitive.M{"$exists": false},
+		"type":      op.In([]int{2, 3}),
+		"active":    true,
+		"isDeleted": false,
+	}
+
+	projection := primitive.M{
+		"_id":    1,
+		"rootID": 1,
+		"name":   1,
+		"extral": 1,
+		"pid":    1,
+		"scope":  1,
+		"type":   1,
+		"active": 1,
+	}
+
+	cur, err := coll.Find(ctx, filter, options.Find().SetProjection(projection))
+	if err != nil {
+		return err
+	}
+
+	var res []*Activity
+	if err := cur.All(ctx, &res); err != nil {
+		return err
+	}
+
+	for i := range res {
+		t := res[i]
+		fixH5NodeActive(ctx, coll, t)
+	}
+
+	return nil
+}
+
 var execs []dbEntity
 
 func init() {
@@ -167,17 +226,18 @@ func init() {
 				"salad":      {"prod", "operation", "dev", "qa", "pre"},
 				"inface":     {"prod", "operation", "dev", "qa", "pre"},
 				"april":      {"prod", "operation", "dev", "qa", "pre"},
-				//"icc": {"prod", "operation", "dev", "qa", "pre"},
-				// "icc": {"dev"},
+				"icc":        {"prod", "operation", "dev", "qa", "pre"},
+				//"icc": {"dev"},
 			},
 		},
 	}
 }
 
 type option struct {
-	MongoDNS string
-	Timeout  int
-	Action   string
+	MongoDNS      string
+	Timeout       int
+	Action        string
+	BmallMondoDNS string
 }
 
 func (o *option) validate() error {
@@ -192,6 +252,7 @@ func (o *option) addFlags(fs *flag.FlagSet) {
 	fs.StringVar(&o.MongoDNS, "mongo-dns", "", "the mongoDB connect address")
 	fs.IntVar(&o.Timeout, "timeout", 1, "the exec timeout setting,default 1 minute")
 	fs.StringVar(&o.Action, "action", "all", "the exec action,default all")
+	fs.StringVar(&o.BmallMondoDNS, "bmall-mongo-dns", "", "the bmall-bff mongo connect address")
 }
 
 func initOptions(fs *flag.FlagSet, args ...string) (*option, error) {
@@ -209,7 +270,7 @@ func initOptions(fs *flag.FlagSet, args ...string) (*option, error) {
 
 func exec(ctx context.Context, cli *mongo.Client) {
 	for _, v := range execs {
-		v.run(ctx, cli, fixH5ActivityType)
+		v.run(ctx, cli, fixH5ActivityActStatus)
 	}
 }
 
@@ -231,6 +292,10 @@ func main() {
 	case "syncMaterials":
 		//同步素材
 		if err := material.SyncMaterials(ctx, dbCli); err != nil {
+			log.Fatal(err)
+		}
+	case "syncUnitFontMaterials":
+		if err := material.SyncUnityFontMaterials(ctx, dbCli); err != nil {
 			log.Fatal(err)
 		}
 	case "syncMaterialCategorys":
@@ -263,9 +328,47 @@ func main() {
 		if err := material.DealWithPlanBytraverse(ctx, dbCli); err != nil {
 			log.Fatal(err)
 		}
-	default:
+
+	case "resetCategoryVersionID":
+		// 统计投放计划有无覆盖属性
+		if err := material.ResetMaterialCategoryVersionID(ctx, dbCli); err != nil {
+			log.Fatal(err)
+		}
+	case "resetH5StyleMainID":
+		// 统计投放计划有无覆盖属性
+		if err := resetH5StyleMainID(ctx, dbCli); err != nil {
+			log.Fatal(err)
+		}
+	case "resetH5Type":
 		// 默认修复h5 type 类型
 		exec(ctx, dbCli)
+	case "resetH5Active":
+		// 默认修复h5 active状态 类型
+		exec(ctx, dbCli)
+	case "DealwithMaterialCategoryParentID":
+		if err := material.DealwithMaterialCategoryParentID(ctx, dbCli); err != nil {
+			log.Fatal(err)
+		}
+	case "mapOfBmallAndOPS":
+		// 建立bmallID与ops ID的映射关系
+		if o.BmallMondoDNS == "" {
+			log.Fatal("must set bmall mongoDB dsn")
+		}
+
+		bmallCli, err := mongo.Connect(ctx, options.Client().ApplyURI(o.BmallMondoDNS))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if err := material.CreateMapBetweenBmallAndOpsID(ctx, dbCli, bmallCli); err != nil {
+			log.Fatal(err)
+		}
+	case "initUgcCategoryVersionName":
+		if err := initUgcCategoryVersionName(ctx, dbCli); err != nil {
+			log.Fatalln(err)
+		}
+	default:
+		panic("no action" + o.Action)
 	}
 
 }
@@ -293,6 +396,60 @@ func insertDocument(ctx context.Context, client *mongo.Client) error {
 	_, err := collenction.InsertMany(ctx, docs)
 
 	return err
+}
+
+// 更改ugc分类的默认版本名为“初始版本”
+func initUgcCategoryVersionName(ctx context.Context, client *mongo.Client) error {
+	log.Printf("==============run sync start =========== \n")
+	scope := map[string][]string{
+		"videobeats": {"prod", "operation", "dev", "qa", "pre"},
+		"camera360":  {"prod", "operation", "dev", "qa", "pre"},
+		"idphoto":    {"prod", "operation", "dev", "qa", "pre"},
+		"mix":        {"prod", "operation", "dev", "qa", "pre"},
+		"salad":      {"prod", "operation", "dev", "qa", "pre"},
+		"inface":     {"prod", "operation", "dev", "qa", "pre"},
+		"april":      {"prod", "operation", "dev", "qa", "pre"},
+		"icc":        {"prod", "operation", "dev", "qa", "pre"},
+		// "videobeats": {"qa"},
+	}
+	ugcDBNames := make([]string, 0)
+	for sp, envs := range scope {
+		for _, env := range envs {
+			scopEnv := fmt.Sprintf("%s_%s", sp, env)
+			ugccDbName := fmt.Sprintf("%s_%s", scopEnv, "operational_ugc")
+			ugcDBNames = append(ugcDBNames, ugccDbName)
+		}
+	}
+
+	for _, dbName := range ugcDBNames {
+		sps := strings.Split(dbName, "_")
+		if len(sps) < 2 {
+			return fmt.Errorf("cant get scope and env")
+		}
+
+		scope, env := sps[0], sps[1]
+		log.Printf("==============change version name on %s  %s collection ugcCategory  =========== \n", scope, env)
+		ugcColl := client.Database(dbName).Collection("ugcCategory")
+		res, err := ugcColl.UpdateMany(
+			ctx,
+			primitive.M{
+				"versions": primitive.M{"$elemMatch": primitive.M{"versionName": "默认版本"}},
+			},
+			primitive.M{
+				"$set": primitive.M{"versions.$.versionName": "初始版本"},
+			},
+		)
+
+		if err != nil {
+			log.Println(err.Error())
+		} else {
+			log.Printf("==============change %d  version name on %s  %s collection ugcCategory  =========== \n", res.ModifiedCount, scope, env)
+		}
+	}
+
+	log.Printf("==============run sync finished =========== \n")
+
+	return nil
 }
 
 func syncH5Style(ctx context.Context, client *mongo.Client) error {
@@ -343,6 +500,127 @@ func syncH5Style(ctx context.Context, client *mongo.Client) error {
 	return nil
 }
 
+func resetH5StyleMainID(ctx context.Context, client *mongo.Client) error {
+	log.Printf("==============run sync start =========== \n")
+	//mq, cancel := material.InitMQ()
+
+	scope := map[string][]string{
+		"videobeats": {"prod", "dev", "qa", "pre"},
+		"camera360":  {"prod", "dev", "qa", "pre"},
+		"idphoto":    {"prod", "dev", "qa", "pre"},
+		// "mix": {"prod", "dev", "qa", "pre"},
+		"salad":  {"prod", "dev", "qa", "pre"},
+		"inface": {"prod", "dev", "qa", "pre"},
+		"april":  {"prod", "dev", "qa", "pre"},
+		// "icc": {"prod", "dev", "qa", "pre"},
+		// "icc": {"operation"},
+	}
+
+	actDbs := make(map[string]dao.MongodbDAO)
+	h5Dbs := make(map[string]dao.MongodbDAO)
+	for sp, envs := range scope {
+		for _, env := range envs {
+			scopeEnv := fmt.Sprintf("%s_%s", sp, env)
+			actSpaceName := fmt.Sprintf("%s_%s", scopeEnv, "operational-positions")
+			actDbs[actSpaceName] = dao.NewMongodbDAO(client.Database(actSpaceName), "activity")
+			h5SpaceName := fmt.Sprintf("%s_%s", scopeEnv, "h5")
+			h5Dbs[h5SpaceName] = dao.NewMongodbDAO(client.Database(h5SpaceName), "properties")
+		}
+	}
+
+	for sp, envs := range scope {
+		operationDBName := fmt.Sprintf("%s_operation_%s", sp, "h5")
+		operationDB := dao.NewMongodbDAO(client.Database(operationDBName), "properties")
+		cur, err := operationDB.Collection().Find(ctx, primitive.M{})
+		if err != nil {
+			return err
+		}
+		var res []*H5Properties
+		if err := cur.All(ctx, &res); err != nil {
+			return err
+		}
+
+		for i := range res {
+			t := res[i]
+			for _, env := range envs {
+				log.Printf("start sync opration h5 properties %s %s %s h5\n", t.ID.Hex(), sp, env)
+				scopeEnv := fmt.Sprintf("%s_%s", sp, env)
+				spaceName := fmt.Sprintf("%s_%s", scopeEnv, "h5")
+				// spaceActName := fmt.Sprintf("%s_%s", scopeEnv, "operational-positions")
+
+				h5Coll := h5Dbs[spaceName]
+				//actColl := actDbs[spaceActName]
+				h5p := new(H5Properties)
+				err = h5Coll.Collection().FindOne(ctx, primitive.M{"activityID": t.ActivityID}).Decode(h5p)
+				if err != nil {
+					if err == mongo.ErrNoDocuments {
+						log.Printf("end sync opration h5 properties %s %s %s with not found \n ", t.ID.Hex(), sp, env)
+
+						continue
+					}
+
+					return err
+				}
+
+				_, err := h5Coll.Collection().DeleteOne(context.TODO(), primitive.M{"_id": h5p.ID})
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				h5p.ID = t.ID
+				_, err = h5Coll.Collection().UpdateByID(context.TODO(), t.ID, op.Set(t), options.Update().SetUpsert(true))
+				if err != nil {
+					log.Printf("%d reset h5 properties %s failed,error: %s \n", i, t.ID.Hex(), err)
+				} else {
+					log.Printf("%d reset h5 properties %+v success \n", i, t)
+				}
+
+				// projection := primitive.M{
+				// 	"_id":    1,
+				// 	"rootID": 1,
+				// 	"name":   1,
+				// 	"extral": 1,
+				// 	"pid":    1,
+				// 	"scope":  1,
+				// 	"type":   1,
+				// }
+
+				// actID, err := primitive.ObjectIDFromHex(t.ActivityID)
+				// if err != nil {
+				// 	return err
+				// }
+
+				// act := new(Activity)
+				// if err := actColl.Collection().FindOne(
+				// 	context.Background(), primitive.M{"_id": actID}, options.FindOne().SetProjection(projection),
+				// ).Decode(act); err != nil {
+				// 	return err
+				// }
+
+				// msg := []*material.H5PropertiesWithActName{{
+				// 	ID:        t.ID.Hex(),
+				// 	Attribute: t.Attribute,
+				// 	Style:     t.Style,
+				// 	ActID:     t.ActivityID,
+				// 	ActName:   act.Name,
+				// }}
+
+				// if err := material.SendOperitionPositionCreateMesssage(context.Background(), mq, sp, env, msg); err != nil {
+				// 	log.Printf(err.Error())
+				// }
+
+				log.Printf("end sync opration h5 properties %s %s %s h5\n ", t.ID.Hex(), sp, env)
+			}
+
+		}
+
+	}
+
+	//cancel()
+
+	return nil
+}
+
 func doSyncH5Style(ctx context.Context, actColl, h5Coll *mongo.Collection, mq event.Sender, scope, env string) error {
 	filter := primitive.M{
 		"type":      op.In([]int{2, 3}),
@@ -377,7 +655,8 @@ func doSyncH5Style(ctx context.Context, actColl, h5Coll *mongo.Collection, mq ev
 		pro := H5Properties{}
 		err := h5Coll.FindOne(ctx, primitive.M{"activityID": actID}).Decode(&pro)
 		if err != nil {
-			pro.ID = primitive.NewObjectID()
+			// 这里使用activityID 作为h5样式的ID 防止各空间ID不一样
+			pro.ID = t.ID
 		}
 
 		pro.Attribute = attr
@@ -456,6 +735,7 @@ type Activity struct {
 	Type   int                `bson:"type"`
 	Extral Exteral            `bson:"extral"`
 	Name   string             `bson:"name"`
+	Active bool               `bson:"active"`
 }
 
 type Exteral struct {

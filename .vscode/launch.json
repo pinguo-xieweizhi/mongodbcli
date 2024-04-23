@@ -13,15 +13,64 @@
             "args": [
                 "-mongo-dns",
                 // dev
-                "mongodb://a985645edaa0f43f8a2a35e4e541ef5e-1339485449.cn-northwest-1.elb.amazonaws.com.cn:27017/?readPreference=primary&directConnection=true&ssl=false",
+                // "mongodb://a985645edaa0f43f8a2a35e4e541ef5e-1339485449.cn-northwest-1.elb.amazonaws.com.cn:27017/?readPreference=primary&directConnection=true&ssl=false",
                 // qa
                 // "mongodb://root:Oldgirl20220402@dds-bp18678321e991f41210-pub.mongodb.rds.aliyuncs.com:3717,dds-bp18678321e991f42162-pub.mongodb.rds.aliyuncs.com:3717/?authSource=admin&replicaSet=mgset-59911852",
                 // prod
-                // "mongodb://ops:Dpmp34B%3D1a@dds-bp1a2ce765c7df241417-pub.mongodb.rds.aliyuncs.com:3717,dds-bp1a2ce765c7df242227-pub.mongodb.rds.aliyuncs.com:3717/admin?authSource=admin&replicaSet=mgset-55928918&readPreference=primary&ssl=false",
+                "mongodb://ops:Dpmp34B%3D1a@dds-bp1a2ce765c7df241417-pub.mongodb.rds.aliyuncs.com:3717,dds-bp1a2ce765c7df242227-pub.mongodb.rds.aliyuncs.com:3717/admin?authSource=admin&replicaSet=mgset-55928918&readPreference=primary&ssl=false",
                 "-timeout",
                 "5",
                 "-action",
-                "dealWithPlanBytraverse"
+                "syncUnitFontMaterials"
+            ]
+            
+        },
+        {
+            "name": "Launch_change_VN",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "args": [
+                "-mongo-dns",
+                // dev
+                // "mongodb://a985645edaa0f43f8a2a35e4e541ef5e-1339485449.cn-northwest-1.elb.amazonaws.com.cn:27017/?readPreference=primary&directConnection=true&ssl=false",
+                // qa
+                // "mongodb://root:Oldgirl20220402@dds-bp18678321e991f41210-pub.mongodb.rds.aliyuncs.com:3717,dds-bp18678321e991f42162-pub.mongodb.rds.aliyuncs.com:3717/?authSource=admin&replicaSet=mgset-59911852",
+                // prod
+                "mongodb://ops:Dpmp34B%3D1a@dds-bp1a2ce765c7df241417-pub.mongodb.rds.aliyuncs.com:3717,dds-bp1a2ce765c7df242227-pub.mongodb.rds.aliyuncs.com:3717/admin?authSource=admin&replicaSet=mgset-55928918&readPreference=primary&ssl=false",
+                "-timeout",
+                "5",
+                "-action",
+                "initUgcCategoryVersionName"
+            ]
+            
+        },
+        {
+            "name": "relationship_id",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "args": [
+                "-mongo-dns",
+                // dev
+                // "mongodb://a985645edaa0f43f8a2a35e4e541ef5e-1339485449.cn-northwest-1.elb.amazonaws.com.cn:27017/?readPreference=primary&directConnection=true&ssl=false",
+                // qa
+                // "mongodb://root:Oldgirl20220402@dds-bp18678321e991f41210-pub.mongodb.rds.aliyuncs.com:3717,dds-bp18678321e991f42162-pub.mongodb.rds.aliyuncs.com:3717/?authSource=admin&replicaSet=mgset-59911852",
+                // prod
+                "mongodb://ops:Dpmp34B%3D1a@dds-bp1a2ce765c7df241417-pub.mongodb.rds.aliyuncs.com:3717,dds-bp1a2ce765c7df242227-pub.mongodb.rds.aliyuncs.com:3717/admin?authSource=admin&replicaSet=mgset-55928918&readPreference=primary&ssl=false",
+                "-bmall-mongo-dns",
+                // bmall-qa
+                // "mongodb://118.31.246.195:27019", // bamll-qa
+                // "mongodb://118.31.246.195:27017",
+
+                // bamml-prod
+                "mongodb://47.241.131.163:48110,161.117.176.38:48110,47.241.20.115:48110/bmall?replicaSet=bmallrec_rs1&readPreference=secondaryPreferred",
+                "-timeout",
+                "60",
+                "-action",
+                "mapOfBmallAndOPS"
             ]
             
         }

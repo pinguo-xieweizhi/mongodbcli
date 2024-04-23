@@ -28,15 +28,18 @@ var (
 
 	// prod
 	kafkaAddrs = []string{
-		"alikafka-pre-cn-uqm32h3zm00b-1-vpc.alikafka.aliyuncs.com:9092",
-		"alikafka-pre-cn-uqm32h3zm00b-2-vpc.alikafka.aliyuncs.com:9092",
-		"alikafka-pre-cn-uqm32h3zm00b-3-vpc.alikafka.aliyuncs.com:9092",
+		"alikafka-pre-cn-uqm32h3zm00b-1.alikafka.aliyuncs.com:9093",
+		"alikafka-pre-cn-uqm32h3zm00b-2.alikafka.aliyuncs.com:9093",
+		"alikafka-pre-cn-uqm32h3zm00b-3.alikafka.aliyuncs.com:9093",
 	}
 )
 
 func InitMQ() (event.Sender, func()) {
 	return event.NewKafkaSender(&event.Config{
-		Base: event.BaseConfig{},
+		Base: event.BaseConfig{
+			UserName: "cnhzkafka",
+			Password: "CamerA3602023",
+		},
 		Write: event.WriteConfig{
 			Addr:            kafkaAddrs,
 			BatchSize:       1,
@@ -102,6 +105,43 @@ func sendCategoryCreateMessage(ctx context.Context, mq event.Sender, scope, env 
 		msg = append(msg, event.NewEvent(
 			data,
 			v.ID.Hex(),
+			event.WithHeaders(headers),
+			event.WithTopic(topic),
+			event.WithHeaderTrackID(traceID),
+		))
+	}
+
+	return mq.Send(ctx, msg...)
+}
+
+func sendCategoryUpdateMessage(ctx context.Context, mq event.Sender, scope, env string, datas [][]*Category) error {
+	topic := fmt.Sprintf("%s.%s.operate", "operational-materials-svc", "category")
+	headers := map[string]string{
+		"scope": scope,
+		"env":   env,
+	}
+	msg := []event.Event{}
+	for _, cates := range datas {
+		oe := &mapi.CategoryOperateEvent{
+			Data:        []*mapi.Category{},
+			OperateType: "Update",
+			OperatedAt:  time.Now().Unix(),
+		}
+
+		for _, v := range cates {
+			oe.Data = append(oe.Data, convertCategoryToAPI(ctx, v, false))
+		}
+		data, err := protojson.Marshal(oe)
+		if err != nil {
+			return err
+		}
+		xx := cates[0]
+		traceID := xx.ID.Hex() + "sync_by_cli"
+		fmt.Println("traceID", traceID)
+
+		msg = append(msg, event.NewEvent(
+			data,
+			xx.ID.Hex(),
 			event.WithHeaders(headers),
 			event.WithTopic(topic),
 			event.WithHeaderTrackID(traceID),

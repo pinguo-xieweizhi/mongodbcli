@@ -691,24 +691,24 @@ func (oc *OldCategory) convert(fd *api.FieldsDefinition) *Category {
 
 type Category struct {
 	ID        primitive.ObjectID `bson:"_id" json:"id"`
-	Scope     string             `bson:"scope"`
-	Parent    string             `bson:"parent"`
-	TypeID    string             `bson:"typeID"`
-	SortOrder int                `bson:"sortOrder"`
-	IsDeleted bool               `bson:"isDeleted"`
-	Versions  []CategoryVersion  `bson:"versions"`
+	Scope     string             `bson:"scope" json:"scope"`
+	Parent    string             `bson:"parent" json:"parent"`
+	TypeID    string             `bson:"typeID" json:"-"`
+	SortOrder int                `bson:"sortOrder" json:"sortOrder"`
+	IsDeleted bool               `bson:"isDeleted" json:"-"`
+	Versions  []CategoryVersion  `bson:"versions" json:"versions"`
 }
 
 type CategoryVersion struct {
-	VersionID   primitive.ObjectID                `bson:"versionId"`
-	VersionName string                            `bson:"versionName"`
-	Name        string                            `bson:"name"`
-	Creator     string                            `bson:"creator"`
-	Mender      string                            `bson:"mender"`
-	CreatedAt   time.Time                         `bson:"createdAt"`
-	UpdatedAt   time.Time                         `bson:"updatedAt"`
-	Custom      map[string]*fieldvalue.FieldValue `bson:"custom"`
-	Localize    []*fieldvalue.Localize            `bson:"localize"`
+	VersionID   primitive.ObjectID                `bson:"versionId" json:"-"`
+	VersionName string                            `bson:"versionName" json:"-"`
+	Name        string                            `bson:"name" json:"name"`
+	Creator     string                            `bson:"creator" json:"-"`
+	Mender      string                            `bson:"mender" json:"-"`
+	CreatedAt   time.Time                         `bson:"createdAt" json:"-"`
+	UpdatedAt   time.Time                         `bson:"updatedAt" json:"-"`
+	Custom      map[string]*fieldvalue.FieldValue `bson:"custom" json:"custom,omitempty"`
+	Localize    []*fieldvalue.Localize            `bson:"localize" json:"localize,omitempty"`
 }
 
 type Material struct {
@@ -739,21 +739,24 @@ func (m *Material) getVersionIDByKey(key string) (string, bool) {
 }
 
 type MaterialVersion struct {
-	VersionID     primitive.ObjectID                `bson:"versionID"`
-	VersionName   string                            `bson:"versionName"`
-	Name          string                            `bson:"name"`
-	Vip           int                               `bson:"vip"`
-	Tag           []string                          `bson:"tag"`      // 用户使用的标签id，只存标签组末级的id 可以使用多个
-	Platform      []string                          `bson:"platform"` // 适用平台
-	ClientVersion fieldvalue.Version                `bson:"clientVersion"`
-	ValidDuration fieldvalue.Period                 `bson:"validDuration"`
-	CreatedAt     time.Time                         `bson:"createdAt"`
-	UpdatedAt     time.Time                         `bson:"updatedAt"`
-	Creator       string                            `bson:"creator"`
-	Mender        string                            `bson:"mender"`
-	Status        string                            `bson:"status"`
-	Custom        map[string]*fieldvalue.FieldValue `bson:"custom"`
-	Localize      []*fieldvalue.Localize            `bson:"localize"`
+	VersionID     primitive.ObjectID                  `bson:"versionID"`
+	VersionName   string                              `bson:"versionName"`
+	Name          string                              `bson:"name"`
+	Summary       string                              `bson:"summary"`
+	SourceID      string                              `bson:"sourceID"` // 来源ID（用于记录从哪里拷贝来的）
+	Vip           int                                 `bson:"vip"`
+	Tag           []string                            `bson:"tag"`      // 用户使用的标签id，只存标签组末级的id 可以使用多个
+	Platform      []string                            `bson:"platform"` // 适用平台
+	ClientVersion fieldvalue.Version                  `bson:"clientVersion"`
+	ValidDuration fieldvalue.Period                   `bson:"validDuration"`
+	CreatedAt     time.Time                           `bson:"createdAt"`
+	UpdatedAt     time.Time                           `bson:"updatedAt"`
+	Creator       string                              `bson:"creator,omitempty"`
+	Mender        string                              `bson:"mender,omitempty"`
+	Status        string                              `bson:"status"`
+	Custom        map[string]*fieldvalue.FieldValue   `bson:"custom"`
+	Localize      []*fieldvalue.Localize              `bson:"localize"`
+	res           []map[string]*fieldvalue.FieldValue `bson:"-"`
 }
 
 func (m *MaterialVersion) getKey(id string) string {
@@ -1099,6 +1102,28 @@ func (opt *FindOptions) Sorts() ldao.SortFields {
 	}
 }
 
+type UnityFontFindOptions struct {
+	ldao.MongodbFindOptions
+}
+
+func (opt *UnityFontFindOptions) Filter() (interface{}, error) {
+	return primitive.M{
+		"typeID": op.In([]string{"unityFont", "unityFontColor"}),
+	}, nil
+}
+
+func (opt *UnityFontFindOptions) Sorts() ldao.SortFields {
+	// 去除lint警告而已,后续通过lint检测配置处理
+	_ = opt
+
+	return ldao.SortFields{
+		{
+			Name:      "_id",
+			Direction: ldao.SortFieldDesc,
+		},
+	}
+}
+
 type MaterialPosition struct {
 	ID               primitive.ObjectID                `bson:"_id,omitempty"`
 	Scope            string                            `bson:"scope"`
@@ -1163,7 +1188,7 @@ func (p *Plan) newOverrideMaterialsVersion(mdb dao.MongodbDAO, scope, env string
 				if c.Materials != nil {
 					for _, m := range c.Materials {
 						if m.hasOverride() {
-							if isExcludeMaterialsID(scope, env, m.ID) {
+							if !isExcludeMaterialsID(scope, env, m.ID) {
 								continue
 							}
 							key := m.getCacheKey()
@@ -1231,6 +1256,9 @@ func (p *Plan) newOverrideMaterialsVersion(mdb dao.MongodbDAO, scope, env string
 		if v.Materials != nil {
 			for _, m := range v.Materials {
 				if m.hasOverride() {
+					if !isExcludeMaterialsID(scope, env, m.ID) {
+						continue
+					}
 					key := m.getCacheKey()
 					material, err := getSingleNewMaterial(context.Background(), m.ID, mdb)
 					if err != nil {
